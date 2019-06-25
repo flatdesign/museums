@@ -1,50 +1,64 @@
 <template>
   <div class="map-wrapper">
-    <h2>Музеи Москвы</h2>
-    <ul class="tabs">
-      <li><a href="#" @click.prevent="showMap = false">Показать список</a></li>
-      <li><a href="#" @click.prevent="showMap = true">Показать на карте</a></li>
-    </ul>
+    <div class="controls">
+      <h2 class="title">Музеи Москвы</h2>
+      <ul class="tabs">
+        <li><a href="#" @click.prevent="showMap = false" :class="!showMap ? 'active': ''">Показать список</a></li>
+        <li><a href="#" @click.prevent="showMap = true" :class="showMap ? 'active': ''">Показать на карте</a></li>
+      </ul>
+    </div>
+    
+    <div class="md-layout map-table" v-if="!showMap && museums.length">
+      <div class="md-layout-item md-size-100">
+        <md-card>
+          <md-card-header class="md-card-header-icon md-card-header-green">
+            <div class="card-icon">
+              <md-icon>assignment</md-icon>
+            </div>
+            <h4 class="title">Музеи москвы</h4>
+          </md-card-header>
+          <md-card-content>
+            <md-table v-model="museums" table-header-color="green">
+              <md-table-row slot="md-table-row" slot-scope="{ item }">
+                <md-table-cell md-label="id">{{ item.properties.id }}</md-table-cell>
+                <md-table-cell md-label="Название">{{ item.properties.name }}</md-table-cell>
+                <md-table-cell md-label="Адрес">{{item.properties.description}}</md-table-cell>
+              </md-table-row>
+            </md-table>
+          </md-card-content>
+        </md-card>
+      </div>
+    </div>
 
-    <ul class="museum-list" v-if="!showMap">
-      <li 
-        v-for="(museum, index) in museums"
-        :key="index"
+    <div class="map" v-show="showMap">
+      <yandex-map 
+        :settings="settings"
+        :coords="[55.756802, 37.622720]"
+        :controls="['trafficControl', 'fullscreenControl', 'typeSelector', 'zoomControl']"
+        zoom="10"
+        style="width: 100%; height: 600px;"
       >
-        <span>{{museum.properties.name}}</span> - {{museum.properties.description}}
-      </li>
-    </ul>
-    <yandex-map v-else
-      :settings="settings"
-      :coords="[55.756802, 37.622720]"
-      zoom="10"
-      style="width: 100%; height: 600px;"
-      :controls="['trafficControl', 'fullscreenControl', 'typeSelector', 'zoomControl']"
-      @map-was-initialized="initHandler">
-
         <ymap-marker
-          v-for="(museum, index) in museums"
-          :key="index"
-          :coords="museum.geometries[0].coordinates.reverse()"
-
-
-          marker-id="1"
+          v-for="museum in museums"
+          :key="museum.properties.id"
           marker-type="placemark"
-          
-          hint-content="Hint content 1"
+          :coords="museum.geometry.coordinates.slice().reverse()"
+          :marker-id="museum.properties.id"
           :balloon="{header: museum.properties.name, body: museum.properties.description}"
-          cluster-name="1"
+          :init-without-markers="false"
         ></ymap-marker>
-
-    </yandex-map>
+      </yandex-map>
+    </div>
+    
   </div>
 </template>
 
 <script>
   import axios from 'axios';
-  import { yandexMap, ymapMarker } from 'vue-yandex-maps'
+  import { yandexMap, ymapMarker } from 'vue-yandex-maps';
 
   export default {
+    name: "MoscowMap",
     components: {
       yandexMap,
       ymapMarker
@@ -57,7 +71,7 @@
           lang: 'ru_RU',
           version: '2.1'
         },
-        museums: []
+        museums: [],
       }
     },
 
@@ -70,7 +84,7 @@
               "text": "музеи",
               "type": "biz",
               "lang": "ru_RU",
-              "ll": "37.62335600000006,55.75645",   // 55.756802, 37.622720
+              "ll": "37.62335600000006,55.75645",
               "spn": "0.03,0.03",
               "results": "30",
               "rspn": "true"
@@ -80,13 +94,9 @@
           this.museums = responce.data.features;
         } catch(e) {
           console.log(e);
-          alert("Не удалось ")
+          alert("Не удалось загрузить музеи")
         }
-      },
-      initHandler() {
-
       }
-      
     },
     created() {
       this.loadMuseums();
@@ -95,9 +105,18 @@
 </script>
 
 <style lang="scss" scoped>
-  h2 {
+  .controls {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .title {
     margin-top: 0;
+    margin-bottom: 10px;
     font-weight: 700;
+  }
+  .map {
+    padding: 0 15px;
+    margin-bottom: 20px;
   }
   .tabs {
     display: flex;
@@ -106,21 +125,11 @@
     li {
       margin-right: 10px;
       a {
-        &:hover, &:focus {
-          font-weight: 700;
-        }
-      }
-    }  
-  }
-  .museum-list {
-    padding-left: 0;
-    list-style: none;
-    li {
-      border: 1px solid lightgrey;
-      padding: 10px 5px;
-      span {
+        color: #000;
         font-weight: 700;
-        
+        &.active {
+          color: #89229b;
+        }
       }
     }
   }

@@ -166,11 +166,6 @@ let mapsMenu = {
       path: "vector-map",
       name: "Vector Map",
       components: { default: VectorMaps }
-    },
-    {
-      path: "moscow-map",
-      name: "MoscowMap",
-      components: { default: MoscowMap }
     }
   ]
 };
@@ -233,7 +228,7 @@ let authPages = {
 const routes = [
   {
     path: "/",
-    redirect: "/dashboard",
+    redirect: "/moscow-map",
     name: "Home"
   },
   componentsMenu,
@@ -246,6 +241,11 @@ const routes = [
     path: "/",
     component: DashboardLayout,
     children: [
+      {
+        path: "moscow-map",
+        name: "MoscowMap",
+        components: { default: MoscowMap }
+      },
       {
         path: "dashboard",
         name: "Dashboard",
